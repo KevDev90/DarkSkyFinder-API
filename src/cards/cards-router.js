@@ -22,26 +22,7 @@ cardsRouter
     const knexInstance = req.app.get("db");
     CardsService.getAllCards(knexInstance)
       .then((cards) => {
-        res.json(card.map(serializeCard));
-      })
-      .catch(next);
-  })
-
-  cardsRouter
-  .route("/:card_id")
-  .all((req, res, next) => {
-    const { card_id } = req.params;
-    console.log("card_id", note_id);
-    console.log();
-    CardsService.getById(req.app.get("db"), card_id)
-      .then((card) => {
-        if (!card) {
-          return res.status(404).json({
-            error: { message: `card Not Found` },
-          });
-        }
-        res.card = card;
-        next();
+        res.json(cards.map(serializeCard));
       })
       .catch(next);
   })
@@ -63,6 +44,29 @@ cardsRouter
       })
       .catch(next)
   });
+
+  cardsRouter
+  .route("/:card_id")
+  .all((req, res, next) => {
+    const { card_id } = req.params;
+    console.log("card_id", note_id);
+    console.log();
+    CardsService.getById(req.app.get("db"), card_id)
+      .then((card) => {
+        if (!card) {
+          return res.status(404).json({
+            error: { message: `card Not Found` },
+          });
+        }
+        res.card = card;
+        next();
+      })
+      .catch(next);
+  })
+
+  .get((req, res) => {
+    res.json(serializeCard(res.card))
+  })
 
 
   module.exports = cardsRouter;
