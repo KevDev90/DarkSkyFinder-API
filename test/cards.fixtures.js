@@ -3,7 +3,7 @@ function makeCardsArray() {
         {
             id: 1,
             title: "card 1",
-            modified: "03-27-2021",
+            modified: "2021-03-01T14:07:31.292Z",
             folder_id: 1,
             details: "This is a test card. Sunny, warm, short",
             favorited: true,
@@ -11,7 +11,7 @@ function makeCardsArray() {
         {
             id: 2,
             title: "card 2",
-            modified: "2021-03-25T00:00:00.000Z",
+            modified: "2021-03-01T14:07:31.292Z",
             folder_id: 2,
             details: "This is a test card. Cloudy, warm, long",
             favorited: false,
@@ -19,7 +19,7 @@ function makeCardsArray() {
         {
             id: 3,
             title: "card 3",
-            modified: "03-26-2021",
+            modified: "2021-03-01T14:07:31.292Z",
             folder_id: 1,
             details: "This is a test card. Sunny, cold, short",
             favorited: true,
@@ -27,7 +27,7 @@ function makeCardsArray() {
         {
             id: 4,
             title: "card 4",
-            modified: "03-22-2021",
+            modified: "2021-03-01T14:07:31.292Z",
             folder_id: 2,
             details: "This is a test card. Snowy, cold, short",
             favorited: false,

@@ -5,6 +5,8 @@ const cors = require('cors')
 const helmet = require('helmet')
 const {CLIENT_ORIGIN} = require('./config');
 const { NODE_ENV } = require('./config')
+const cardsRouter = require('./cards/cards-router')
+const foldersRouter = require('./folders/folders-router')
 
 const app = express()
 
@@ -14,11 +16,14 @@ const morganOption = (NODE_ENV === 'production')
 
 app.use(morgan(morganOption))
 app.use(helmet())
-app.use(
-  cors({
-      origin: CLIENT_ORIGIN
-  })
-);
+// app.use(
+//   cors({
+//       origin: CLIENT_ORIGIN
+//   })
+// );
+
+app.use('/api/folders', foldersRouter)
+app.use('/api/cards', cardsRouter)
 
 
 app.get('/', (req, res) => {
