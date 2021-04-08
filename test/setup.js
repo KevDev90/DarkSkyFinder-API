@@ -1,5 +1,9 @@
-const { expect } = require('chai')
-const supertest = require('supertest')
+const chai = require("chai");
+const chaiHttp = require("chai-http");
+const sinon = require("sinon");
 
-global.expect = expect
-global.supertest = supertest
+chai.use(chaiHttp);
+
+global.chai = chai;
+global.expect = chai.expect;
+global.sinon = sinon;

@@ -1,233 +1,139 @@
-const knex = require("knex");
 const { makeFoldersArray } = require("./folders.fixtures");
 const app = require("../src/app");
-const store = require("../src/store");
-const supertest = require("supertest");
+const FoldersService = require("../src/folders/folders-service");
 
-
-describe("Folders Endpoints", () => {
-  let foldersCopy, db;
-
-  before("make knex instance", () => {
-    db = knex({
-      client: "pg",
-      connection: process.env.TEST_DATABASE_URL,
-    });
-    app.set("db", db);
-  });
-
-  after("disconnect from db", () => db.destroy());
-
-
-  before("cleanup", () => db("darksky_folders").delete());
-
-  afterEach("cleanup", () => db("darksky_folders").delete());
-
-  beforeEach("copy the folders", () => {
-    foldersCopy = store.folders.slice();
-  });
-
-  afterEach("restore the folders", () => {
-    store.folders = foldersCopy;
-  });
-
+describe("Folder Endpoints", () => {
   describe("GET /api/folders", () => {
-    context(`Given no folders`, () => {
-      it(`responds with 200 and an empty list`, () => {
-        return (
-          supertest(app)
-            .get("/api/folders")
-            //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-            .expect(200, [])
-        );
-      });
+    it(`responds with 200 and folder list`, () => {
+      const foldersArray = makeFoldersArray();
+      const getAllFolders = sinon
+        .stub(FoldersService, "getAllFolders")
+        .resolves(foldersArray);
+      chai
+        .request(app)
+        .get("/api/folders")
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body).to.deep.equal(foldersArray);
+          getAllFolders.restore();
+        });
     });
   });
-  describe("GET /api/folders/:id", () => {
-    context(`Given no folders`, () => {
-      it(`responds 404 when folder doesn't exist`, () => {
-        return (
-          supertest(app)
-            .get(`/api/folders/123`)
-            //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-            .expect(404, {
-              error: { message: `Folder Not Found` },
-            })
-        );
-      });
-    });
-    context("Given there are folders in the database", () => {
-      const testFolders = makeFoldersArray();
-
-      beforeEach("insert folder", () => {
-        return db.into("darksky_folders").insert(testFolders);
-      });
-
-      it("responds with 200 and the specified folder", () => {
-        const folderId = 2;
-        const expectedFolder = testFolders[folderId - 1];
-        return (
-          supertest(app)
-            .get(`/api/folders/${folderId}`)
-            //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-            .expect(200, expectedFolder)
-        );
-      });
-    });
-  });
-
-  describe("DELETE /api/folders/:id", () => {
-    context(`Given no folders`, () => {
-      it(`responds 404 when folder doesn't exist`, () => {
-        return supertest(app)
-          .delete(`/api/folders/123`)
-          //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-          .expect(404, {
-            error: { message: `Folder Not Found` },
+  describe("POST /api/folders", () => {
+    it(`No title - responds with 400 and required error message`, () => {
+      chai
+        .request(app)
+        .post("/api/folders")
+        .send({})
+        .end((err, res) => {
+          res.should.have.status(400);
+          expect(res.body).to.deep.equal({
+            error: { message: `Missing 'title' in request body` },
           });
-      });
-    });
-
-    context("Given there are folders in the database", () => {
-      const testFolders = makeFoldersArray();
-
-      beforeEach("insert folders", () => {
-        return db.into("darksky_folders").insert(testFolders);
-      });
-
-      it("removes the folder by ID from the store", () => {
-        const idToRemove = 2;
-        const expectedFolders = testFolders.filter((nt) => nt.id !== idToRemove);
-        return supertest(app)
-          .delete(`/api/folders/${idToRemove}`)
-          //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-          .expect(204)
-          .then(() =>
-            supertest(app)
-              .get(`/api/folders`)
-              //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-              .expect(expectedFolders)
-          );
-      });
+        });
     });
   });
 
   describe("POST /api/folders", () => {
-    it(`responds with 400 missing 'title' if not supplied`, () => {
-      const newFolderMissingTitle = {
-        // title: 'test-title',
+    it(`responds with 201 and inserted folder`, () => {
+      const reqBody = {
+        title: "mockTitle",
       };
-      return supertest(app)
-        .post(`/api/folders`)
-        .send(newFolderMissingTitle)
-        //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-        .expect(400, {
-          error: { message: `Missing 'title' in request body` },
+      const insertFolder = sinon
+        .stub(FoldersService, "insertFolder")
+        .resolves(reqBody);
+      chai
+        .request(app)
+        .post("/api/folders")
+        .send(reqBody)
+        .end((err, res) => {
+          res.should.have.status(201);
+          expect(res.body).to.deep.equal(reqBody);
+          insertFolder.restore();
         });
     });
-
-
-    it("creates a folder, responding with 201 and the new folder", () => {
-      const newFolder = {
-        title: "test-title",
-      };
-      return supertest(app)
-        .post(`/api/folders`)
-        .send(newFolder)
-        //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-        .expect(201)
-        .expect((res) => {
-          expect(res.body.title).to.eql(newFolder.title);
-          expect(res.body).to.have.property("id");
-          expect(res.headers.location).to.eql(`/api/folders/${res.body.id}`);
-        })
-        .then((res) =>
-          supertest(app)
-            .get(`/api/folders/${res.body.id}`)
-            //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-            .expect(res.body)
-        );
-    });
   });
-
-
-  describe(`PATCH /api/folders/:folder_id`, () => {
-    context(`Given no folders`, () => {
-      it(`responds with 404`, () => {
-        const folderId = 123456;
-        return supertest(app)
-          .patch(`/api/folders/${folderId}`)
-          //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-          .expect(404, { error: { message: `Folder Not Found` } });
-      });
+  describe("Get /:folder id", () => {
+    it(`folder not found`, () => {
+      const getById = sinon.stub(FoldersService, "getById").resolves(null);
+      chai
+        .request(app)
+        .get("/api/folders/123")
+        .end((err, res) => {
+          res.should.have.status(404);
+          expect(res.body.error.message).to.deep.equal("Folder Not Found");
+          getById.restore();
+        });
     });
-    context("Given there are folders in the database", () => {
-      const testFolders = makeFoldersArray();
-
-      beforeEach("insert folders", () => {
-        return db.into("darksky_folders").insert(testFolders);
-      });
-
-      it("responds with 204 and updates the folder", () => {
-        const idToUpdate = 2;
-        const updateFolder = {
-          title: "updated folder title",
-        };
-        const expectedFolder = {
-          ...testFolders[idToUpdate - 1],
-          ...updateFolder,
-        };
-        return supertest(app)
-          .patch(`/api/folders/${idToUpdate}`)
-          .send(updateFolder)
-          //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-          .expect(204)
-          .then((res) =>
-            supertest(app)
-              .get(`/api/folders/${idToUpdate}`)
-              //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-              .expect(expectedFolder)
+    it(`folder found`, () => {
+      const mockFolder = { title: "mockTitle" };
+      const myGetById = sinon
+        .stub(FoldersService, "getById")
+        .resolves(mockFolder);
+      chai
+        .request(app)
+        .get("/api/folders/123")
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body.title).to.deep.equal("mockTitle");
+          myGetById.restore();
+        });
+    });
+    it(`folder deleted`, () => {
+      const mockFolder = { title: "mockTitle" };
+      const getById = sinon
+        .stub(FoldersService, "getById")
+        .resolves({ mockFolder });
+      const deleteFolder = sinon
+        .stub(FoldersService, "deleteFolder")
+        .resolves({});
+      chai
+        .request(app)
+        .delete("/api/folders/123")
+        .end((err, res) => {
+          res.should.have.status(204);
+          deleteFolder.restore();
+          getById.restore();
+        });
+    });
+    it(`folder update - no title`, () => {
+      const reqBody = {};
+      const mockFolder = { title: "mockTitle" };
+      const getById = sinon
+        .stub(FoldersService, "getById")
+        .resolves({ mockFolder });
+      chai
+        .request(app)
+        .patch("/api/folders/123")
+        .send(reqBody)
+        .end((err, res) => {
+          res.should.have.status(400);
+          expect(res.body.error.message).to.deep.equal(
+            `Request body must contain 'title'`
           );
-      });
-
-      it(`responds with 400 when no required fields supplied`, () => {
-        const idToUpdate = 2;
-        return supertest(app)
-          .patch(`/api/folders/${idToUpdate}`)
-          //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-          .send({ irrelevantField: "foo" })
-          .expect(400, {
-            error: {
-              message: `Request body must contain 'title'`,
-            },
-          });
-      });
-
-      it(`responds with 204 when updating only a subset of fields`, () => {
-        const idToUpdate = 2;
-        const updateFolder = {
-          title: "updated folder title",
-        };
-        const expectedFolder = {
-          ...testFolders[idToUpdate - 1],
-          ...updateFolder,
-        };
-
-        return supertest(app)
-          .patch(`/api/folders/${idToUpdate}`)
-          .send({
-            ...updateFolder,
-            fieldToIgnore: "should not be in GET response",
-          })
-          //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-          .expect(204)
-          .then((res) =>
-            supertest(app)
-              .get(`/api/folders/${idToUpdate}`)
-              //.set("Authorization", `Bearer ${process.env.API_TOKEN}`)
-              .expect(expectedFolder)
-          );
-      });
+          getById.restore();
+        });
+    });
+    it(`folder updated`, () => {
+      const reqBody = {
+        title: "mockTitle",
+      };
+      const mockFolder = { title: "mockTitle" };
+      const getById = sinon
+        .stub(FoldersService, "getById")
+        .resolves({ mockFolder });
+      const updateFolder = sinon
+        .stub(FoldersService, "updateFolder")
+        .resolves(reqBody);
+      chai
+        .request(app)
+        .patch("/api/folders/123")
+        .send(reqBody)
+        .end((err, res) => {
+          res.should.have.status(204);
+          updateFolder.restore();
+          getById.restore();
+        });
     });
   });
 });
