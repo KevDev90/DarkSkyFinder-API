@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 8000;
 console.log('dburl', DATABASE_URL)
 const db = knex({
   client: 'pg',
-    connection: `${process.env.DATABASE_URL}?ssl=true`,
+    connection: `${process.env.DATABASE_URL}`,
     ssl: { rejectUnauthorized: false }
   // client: 'pg',
   // connection: DATABASE_URL,
