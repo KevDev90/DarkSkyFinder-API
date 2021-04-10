@@ -7,7 +7,6 @@ const pg = require('pg');
 // pg.defaults.ssl = process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false;
 
 const PORT = process.env.PORT || 8000;
-console.log('dburl', DATABASE_URL)
 const db = knex({
   client: 'pg',
     connection: `${process.env.DATABASE_URL}?ssl=true`,

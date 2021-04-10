@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 
     app.use((error, req, res, next) => {
       let response
-      console.log('error', error)
+      //console.log('error', error)**//
       if (process.env.NODE_ENV === 'production') {
         response = { error: { message: 'server error' }}
       } else {

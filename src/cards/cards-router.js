@@ -27,9 +27,12 @@ cardsRouter
   })
 
   .post(jsonParser, (req, res, next) => {
-    const { details, title, modified, folder_id, favorited } = req.body
-    const newCard = { details, title, modified, folder_id, favorited };
-      for (const field of ['title', 'modified', 'folder_id', 'details', 'favorited']) {
+    // const { details, title, modified, folder_id, favorited } = req.body
+    const { details, title, modified, folder_id} = req.body
+    // const newCard = { details, title, modified, folder_id, favorited };
+    const newCard = { details, title, modified, folder_id };
+    //   for (const field of ['title', 'modified', 'folder_id', 'details', 'favorited']) {
+        for (const field of ['title', 'modified', 'folder_id', 'details']) {
         if (!req.body[field]) {
           return res.status(400).send({
             error: { message: `'${field}' is required` }
