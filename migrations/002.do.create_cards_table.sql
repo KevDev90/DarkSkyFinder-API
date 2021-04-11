@@ -5,5 +5,4 @@ CREATE TABLE darksky_cards (
     folder_id INTEGER
         REFERENCES darksky_folders(id) ON DELETE CASCADE,
     details TEXT NOT NULL,
-    favorited BOOLEAN,
-);
+    );
