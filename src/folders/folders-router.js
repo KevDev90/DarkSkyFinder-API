@@ -15,7 +15,6 @@ foldersRouter
   .route("/")
   .get((req, res, next) => {
       const knexInstance = req.app.get("db");
-      console.log('foldersget', knexInstance)
     FoldersService.getAllFolders(knexInstance)
       .then((folders) => {
         res.json(folders.map(serializeFolder));
@@ -59,7 +58,6 @@ foldersRouter
   })
 
   .get((req, res) => {
-    console.log(res.folder);
     res.json(serializeFolder(res.folder));
   })
   .delete((req, res, next) => {

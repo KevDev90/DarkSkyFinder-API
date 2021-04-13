@@ -8,7 +8,6 @@ const FoldersService = {
          .into('darksky_folders')
          .returning('*')
          .then(rows => {
-           console.log(rows)
           return rows[0]
         })
     },

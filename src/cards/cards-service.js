@@ -3,12 +3,12 @@ const CardsService = {
       return knex.select("*").from("darksky_cards");
     },
     insertCard(knex, newCard) {
+        
       return knex
          .insert(newCard)
          .into('darksky_cards')
          .returning('*')
          .then(rows => {
-           console.log(rows)
           return rows[0]
         })
     },

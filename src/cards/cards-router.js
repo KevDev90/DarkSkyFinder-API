@@ -27,11 +27,8 @@ cardsRouter
   })
 
   .post(jsonParser, (req, res, next) => {
-    // const { details, title, modified, folder_id, favorited } = req.body
     const { details, title, modified, folder_id} = req.body
-    // const newCard = { details, title, modified, folder_id, favorited };
     const newCard = { details, title, modified, folder_id };
-    //   for (const field of ['title', 'modified', 'folder_id', 'details', 'favorited']) {
         for (const field of ['title', 'modified', 'folder_id', 'details']) {
         if (!req.body[field]) {
           return res.status(400).send({
@@ -67,7 +64,6 @@ cardsRouter
   })
 
   .get((req, res) => {
-    console.log(res.card)
     res.json(serializeCard(res.card))
   })
 
@@ -85,7 +81,7 @@ cardsRouter
     if (numberOfValues === 0) {
       return res.status(400).json({
         error: {
-          message: `Request body must contain either 'title', 'folder_id', 'details', or 'favorited'`,
+          message: `Request body must contain either 'title', 'folder_id', 'details'`,
         },
       });
     }

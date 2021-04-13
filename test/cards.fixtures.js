@@ -37,5 +37,4 @@ function makeCardsArray() {
 
   module.exports = {
     makeCardsArray
-    //makeMaliciousNote,
   }; 
